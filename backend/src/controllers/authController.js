@@ -5,70 +5,13 @@ const crypto = require('crypto');
 const db = require('../db/database');
 const config = require('../config/config');
 const { sendOtpToUser, verifyOtp: verifyOtpService, generateOtpSecret } = require('../services/otpService');
-const { sendWelcomeEmail, sendOtpEmail, sendPasswordResetEmail, sendAccountCreatedEmail } = require('../services/emailService');
+const { sendWelcomeEmail, sendOtpEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 // Generate JWT
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, config.jwt.secret, {
         expiresIn: config.jwt.expiresIn,
     });
-};
-
-// @desc    Register new user
-// @route   POST /api/auth/register
-// @access  Public
-const register = async (req, res) => {
-    const { name, email, password, phone_number, role, organization_id } = req.body;
-
-    if (!name || !email || !password || !phone_number || !role) { // phone_number is now required
-        return res.status(400).json({ message: 'Please enter all required fields: name, email, password, phone_number, role' });
-    }
-
-    // Basic role validation
-    const allowedRoles = ['SYSTEM_ADMIN', 'BOARD_MEMBER', 'COOP_ADMIN', 'BUYER_ADMIN', 'FIELD_OPERATOR'];
-    if (!allowedRoles.includes(role)) {
-        return res.status(400).json({ message: `Invalid role. Allowed roles are: ${allowedRoles.join(', ')}` });
-    }
-
-    // Check if user exists
-    const userExists = await db('users').where({ email }).first();
-    if (userExists) {
-        return res.status(400).json({ message: 'User already exists with this email' });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    try {
-        const [userId] = await db('users').insert({
-            name,
-            email,
-            password: hashedPassword,
-            phone_number: phone_number || null, // phone_number is optional
-            role,
-            organization_id: organization_id || null, // organization_id is optional
-            is_active: true,
-        });
-
-        const newUser = await db('users').where({ id: userId }).first();
-
-        // Send account created email with password
-        await sendAccountCreatedEmail(newUser.email, newUser.name, newUser.email, password); // Pass the original password
-
-        res.status(201).json({
-            message: 'User registered successfully. Account details sent to email.',
-            user: {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-            },
-        });
-    } catch (error) {
-        console.error('Error during registration:', error);
-        res.status(500).json({ message: 'Server error during registration' });
-    }
 };
 
 // @desc    Authenticate a user & get token
@@ -291,7 +234,6 @@ const otpLogin = async (req, res) => {
 };
 
 module.exports = {
-    register,
     login,
     requestPasswordReset,
     resetPassword,
