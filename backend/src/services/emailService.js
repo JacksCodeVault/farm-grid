@@ -3,7 +3,6 @@ const config = require('../config/config');
 const welcomeEmailTemplate = require('../templates/emails/welcome');
 const otpEmailTemplate = require('../templates/emails/otp');
 const passwordResetEmailTemplate = require('../templates/emails/passwordReset');
-const passwordlessLoginEmailTemplate = require('../templates/emails/passwordlessLogin');
 const accountCreatedEmailTemplate = require('../templates/emails/accountCreated');
 
 const transporter = nodemailer.createTransport({
@@ -55,12 +54,6 @@ const sendPasswordResetEmail = async (to, resetLink) => {
     return sendEmail(to, subject, html);
 };
 
-const sendPasswordlessLoginEmail = async (to, loginLink) => {
-    const subject = 'FarmGrid Passwordless Login';
-    const html = passwordlessLoginEmailTemplate(loginLink);
-    return sendEmail(to, subject, html);
-};
-
 const sendAccountCreatedEmail = async (to, username, email, password) => {
     const subject = 'Your FarmGrid Account Details';
     const html = accountCreatedEmailTemplate(username, email, password);
@@ -72,6 +65,5 @@ module.exports = {
     sendWelcomeEmail,
     sendOtpEmail,
     sendPasswordResetEmail,
-    sendPasswordlessLoginEmail,
     sendAccountCreatedEmail,
 };

@@ -9,8 +9,7 @@ router.post('/request-password-reset', authController.requestPasswordReset);
 router.post('/reset-password', authController.resetPassword);
 router.post('/request-otp', authController.requestOtp);
 router.post('/verify-otp', authController.verifyOtp);
-router.post('/passwordless-login-request', authController.requestPasswordlessLogin);
-router.get('/passwordless-login', authController.passwordlessLogin);
+router.post('/otp-login', authController.otpLogin);
 
 const { protect, authorize } = require('../middleware/authMiddleware');
 

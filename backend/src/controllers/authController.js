@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const db = require('../db/database');
 const config = require('../config/config');
 const { sendOtpToUser, verifyOtp: verifyOtpService, generateOtpSecret } = require('../services/otpService');
-const { sendWelcomeEmail, sendOtpEmail, sendPasswordResetEmail, sendPasswordlessLoginEmail, sendAccountCreatedEmail } = require('../services/emailService');
+const { sendWelcomeEmail, sendOtpEmail, sendPasswordResetEmail, sendAccountCreatedEmail } = require('../services/emailService');
 
 // Generate JWT
 const generateToken = (id, role) => {
@@ -20,8 +20,8 @@ const generateToken = (id, role) => {
 const register = async (req, res) => {
     const { name, email, password, phone_number, role, organization_id } = req.body;
 
-    if (!name || !email || !password || !role) {
-        return res.status(400).json({ message: 'Please enter all required fields: name, email, password, role' });
+    if (!name || !email || !password || !phone_number || !role) { // phone_number is now required
+        return res.status(400).json({ message: 'Please enter all required fields: name, email, password, phone_number, role' });
     }
 
     // Basic role validation
@@ -228,69 +228,6 @@ const verifyOtpController = async (req, res) => {
 // @desc    Request passwordless login link
 // @route   POST /api/auth/passwordless-login-request
 // @access  Public
-const requestPasswordlessLogin = async (req, res) => {
-    const { email } = req.body;
-
-    if (!email) {
-        return res.status(400).json({ message: 'Please provide an email address' });
-    }
-
-    const user = await db('users').where({ email }).first();
-
-    if (!user) {
-        return res.status(200).json({ message: 'If a user with that email exists, a passwordless login link has been sent.' });
-    }
-
-    const loginToken = crypto.randomBytes(32).toString('hex');
-    const loginExpires = new Date(Date.now() + 600000); // 10 minutes from now
-
-    await db('users').where({ id: user.id }).update({
-        passwordless_login_token: loginToken,
-        passwordless_login_expires: loginExpires,
-    });
-
-    const loginLink = `${config.cors.origin}/passwordless-login?token=${loginToken}`;
-    await sendPasswordlessLoginEmail(user.email, loginLink);
-
-    res.status(200).json({ message: 'If a user with that email exists, a passwordless login link has been sent.' });
-};
-
-// @desc    Complete passwordless login
-// @route   GET /api/auth/passwordless-login?token=...
-// @access  Public
-const passwordlessLogin = async (req, res) => {
-    const { token } = req.query;
-
-    if (!token) {
-        return res.status(400).json({ message: 'Missing login token' });
-    }
-
-    const user = await db('users')
-        .where({ passwordless_login_token: token })
-        .andWhere('passwordless_login_expires', '>', new Date())
-        .first();
-
-    if (!user) {
-        return res.status(400).json({ message: 'Invalid or expired login token' });
-    }
-
-    // Clear the login token after successful login
-    await db('users').where({ id: user.id }).update({
-        passwordless_login_token: null,
-        passwordless_login_expires: null,
-    });
-
-    // Redirect or respond with token
-    // In a real app, you might redirect to the frontend with the token in a query param or cookie
-    res.json({
-        message: 'Successfully logged in via passwordless link',
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user.id, user.role),
-    });
-};
 
 // @desc    Get user profile
 // @route   GET /api/auth/profile
@@ -312,6 +249,47 @@ const getAdminDashboard = async (req, res) => {
     });
 };
 
+// @desc    OTP Login
+// @route   POST /api/auth/otp-login
+// @access  Public
+const otpLogin = async (req, res) => {
+    const { identifier, otp, type } = req.body; // identifier can be email or phone_number
+
+    if (!identifier || !otp || !type) {
+        return res.status(400).json({ message: 'Please provide identifier, OTP, and type (email/sms)' });
+    }
+
+    let user;
+    if (type === 'email') {
+        user = await db('users').where({ email: identifier }).first();
+    } else if (type === 'sms') {
+        user = await db('users').where({ phone_number: identifier }).first();
+    } else {
+        return res.status(400).json({ message: 'Invalid OTP type. Must be email or sms.' });
+    }
+
+    if (!user || !user.otp_secret) {
+        return res.status(400).json({ message: 'Invalid request or OTP not generated' });
+    }
+
+    const isOtpValid = verifyOtpService(user.otp_secret, otp);
+
+    if (isOtpValid) {
+        // Clear OTP secret after successful login
+        await db('users').where({ id: user.id }).update({ otp_secret: null });
+        res.json({
+            message: 'Successfully logged in via OTP',
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user.id, user.role),
+        });
+    } else {
+        res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -319,8 +297,7 @@ module.exports = {
     resetPassword,
     requestOtp,
     verifyOtp: verifyOtpController,
-    requestPasswordlessLogin,
-    passwordlessLogin,
+    otpLogin,
     getProfile,
     getAdminDashboard,
 };

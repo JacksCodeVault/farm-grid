@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { sendEmail } = require('./src/services/emailService');
+const { sendEmail } = require('../src/services/emailService');
 
 const testEmail = async () => {
     const to = 'ojangoh2@outlook.com'; // Replace with a real email address for testing

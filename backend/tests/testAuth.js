@@ -4,13 +4,14 @@ const axios = require('axios');
 const API_URL = 'http://localhost:3333/api/auth';
 const TEST_EMAIL = 'ojangoh2@outlook.com';
 const TEST_PASSWORD = 'password123'; // As requested by the user
-const TEST_USERNAME = 'Jack Ojango'; // As requested by the user
-const TEST_ROLE = 'SYSTEM_ADMIN'; // As requested by the user
+const TEST_USERNAME = 'Jack Ojango';
+const TEST_ROLE = 'SYSTEM_ADMIN';
+const TEST_PHONE_NUMBER = '+254712345678'; // Required for registration now
+
+const db = require('../src/db/database'); // Import db for testing
 
 let authToken = '';
-let resetToken = '';
-let loginlessToken = '';
-let otpSecret = ''; // In a real scenario, this would be handled by the OTP service internally
+let otpValue = '';
 
 const runTests = async () => {
     console.log('--- Starting Authentication System Tests ---');
@@ -22,6 +23,7 @@ const runTests = async () => {
             name: TEST_USERNAME,
             email: TEST_EMAIL,
             password: TEST_PASSWORD,
+            phone_number: TEST_PHONE_NUMBER,
             role: TEST_ROLE,
         });
         console.log('Register Success:', res.data);
@@ -30,12 +32,12 @@ const runTests = async () => {
         if (error.response && error.response.data.message === 'User already exists with this email') {
             console.log('User already exists, proceeding with login.');
         } else {
-            return; // Stop if registration truly fails
+            return;
         }
     }
 
-    // 2. Login User
-    console.log('\n--- Test: Login User ---');
+    // 2. Login User (Password-based)
+    console.log('\n--- Test: Login User (Password-based) ---');
     try {
         const res = await axios.post(`${API_URL}/login`, {
             email: TEST_EMAIL,
@@ -55,9 +57,6 @@ const runTests = async () => {
             email: TEST_EMAIL,
         });
         console.log('Request Password Reset Success:', res.data);
-        // In a real scenario, you'd fetch the token from the email.
-        // For testing, we'll simulate getting it from the database or a mock email service.
-        // For now, we'll assume the email was sent and manually get the token if needed for a full test.
     } catch (error) {
         console.error('Request Password Reset Failed:', error.response ? error.response.data : error.message);
     }
@@ -70,23 +69,34 @@ const runTests = async () => {
             type: 'email',
         });
         console.log('Request OTP (Email) Success:', res.data);
-        // In a real scenario, you'd fetch the OTP from the email.
-        // For now, we'll assume it's sent.
+
+        // Retrieve the actual OTP from the database
+        const user = await db('users').where({ email: TEST_EMAIL }).first();
+        if (user && user.otp_secret) {
+            otpValue = user.otp_secret;
+            console.log(`Retrieved OTP from DB: ${otpValue}`);
+        } else {
+            console.error('Failed to retrieve OTP from database.');
+            return;
+        }
     } catch (error) {
         console.error('Request OTP (Email) Failed:', error.response ? error.response.data : error.message);
+        return;
     }
 
-    // 5. Request Passwordless Login
-    console.log('\n--- Test: Request Passwordless Login ---');
+    // 5. OTP Login (Email)
+    console.log('\n--- Test: OTP Login (Email) ---');
     try {
-        const res = await axios.post(`${API_URL}/passwordless-login-request`, {
-            email: TEST_EMAIL,
+        const res = await axios.post(`${API_URL}/otp-login`, {
+            identifier: TEST_EMAIL,
+            otp: otpValue,
+            type: 'email',
         });
-        console.log('Request Passwordless Login Success:', res.data);
-        // In a real scenario, you'd fetch the login token from the email.
-        // For now, we'll assume it's sent.
+        console.log('OTP Login (Email) Success:', res.data);
+        authToken = res.data.token;
     } catch (error) {
-        console.error('Request Passwordless Login Failed:', error.response ? error.response.data : error.message);
+        console.error('OTP Login (Email) Failed:', error.response ? error.response.data : error.message);
+        return;
     }
 
     // 6. Access Protected Route (Profile)
@@ -115,16 +125,7 @@ const runTests = async () => {
         console.error('Access Admin Dashboard Failed:', error.response ? error.response.data : error.message);
     }
 
-    // 8. Access Protected Route (Admin Dashboard - with incorrect role - requires a different user or token)
-    // This test would require registering a user with a non-admin role and trying to access the admin dashboard.
-    // For simplicity, we'll skip this for now, but it's an important test case.
-    console.log('\n--- Test: Access Protected Admin Dashboard Route (Incorrect Role - Skipped) ---');
-    console.log('To fully test role-based access, create a user with a non-admin role and attempt to access the admin-dashboard route.');
-
     console.log('\n--- Authentication System Tests Complete ---');
 };
 
-// Start the server before running tests
-// You would typically run your Express server in a separate process
-// For this test script, ensure your backend server is running on PORT 3333
 runTests();

@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { sendWelcomeEmail, sendOtpEmail, sendPasswordResetEmail, sendPasswordlessLoginEmail } = require('./src/services/emailService');
+const { sendWelcomeEmail, sendOtpEmail, sendPasswordResetEmail, sendPasswordlessLoginEmail } = require('../src/services/emailService');
 
 const testEmailTemplates = async () => {
     const testEmailAddress = 'ojangoh2@outlook.com';
