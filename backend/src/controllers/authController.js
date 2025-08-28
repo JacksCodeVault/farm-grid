@@ -48,6 +48,34 @@ const login = async (req, res) => {
     }
 };
 
+// @desc    Refresh Access Token
+// @route   POST /api/auth/refresh-token
+// @access  Public
+const refreshToken = async (req, res) => {
+    // The 'protect' middleware already verifies the token and attaches user info to req.user
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    try {
+        const user = await db('users').where({ id: userId }).first();
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate a new access token
+        const newAccessToken = generateToken(user.id, user.role);
+
+        res.json({
+            token: newAccessToken,
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error during token refresh' });
+    }
+};
+
 // @desc    Request password reset
 // @route   POST /api/auth/request-password-reset
 // @access  Public
@@ -242,4 +270,5 @@ module.exports = {
     otpLogin,
     getProfile,
     getAdminDashboard,
+    refreshToken,
 };
