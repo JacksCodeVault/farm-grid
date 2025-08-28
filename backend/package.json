@@ -8,21 +8,23 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "db:migrate": "npx knex migrate:latest",
-  "db:rollback": "npx knex migrate:rollback",
-  "db:seed": "npx knex seed:run"
+    "db:rollback": "npx knex migrate:rollback",
+    "db:seed": "npx knex seed:run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
+    "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
-    "mysql2": "^3.14.3"
+    "mysql2": "^3.14.3",
+    "nodemailer": "^7.0.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -1,10 +1,21 @@
-// src/routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
-const { registerUser, verifyUserOtp, loginUser } = require('../controllers/authController');
+const authController = require('../controllers/authController');
 
-router.post('/register', registerUser);
-router.post('/verify-otp', verifyUserOtp);
-router.post('/login', loginUser);
+// Public routes
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.post('/request-password-reset', authController.requestPasswordReset);
+router.post('/reset-password', authController.resetPassword);
+router.post('/request-otp', authController.requestOtp);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/passwordless-login-request', authController.requestPasswordlessLogin);
+router.get('/passwordless-login', authController.passwordlessLogin);
+
+const { protect, authorize } = require('../middleware/authMiddleware');
+
+// Protected routes (example)
+router.get('/profile', protect, authController.getProfile);
+router.get('/admin-dashboard', protect, authorize('SYSTEM_ADMIN', 'BOARD_MEMBER'), authController.getAdminDashboard);
 
 module.exports = router;

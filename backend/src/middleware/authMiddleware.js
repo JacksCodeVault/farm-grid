@@ -1,7 +1,6 @@
-// src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const db = require('../db/database'); // Assuming you have a database connection
 const config = require('../config/config');
+const db = require('../db/database');
 
 const protect = async (req, res, next) => {
     let token;
@@ -12,10 +11,15 @@ const protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
 
             // Verify token
-            const decoded = jwt.verify(token, config.jwtSecret);
+            const decoded = jwt.verify(token, config.jwt.secret);
 
             // Attach user to the request
-            req.user = await db('users').where({ id: decoded.id }).first();
+            req.user = await db('users').where({ id: decoded.id }).select('id', 'name', 'email', 'role').first();
+
+            if (!req.user) {
+                return res.status(401).json({ message: 'Not authorized, user not found' });
+            }
+
             next();
         } catch (error) {
             console.error(error);
@@ -28,4 +32,13 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+const authorize = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ message: `User role ${req.user ? req.user.role : 'unknown'} is not authorized to access this route` });
+        }
+        next();
+    };
+};
+
+module.exports = { protect, authorize };

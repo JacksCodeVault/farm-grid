@@ -1,49 +1,38 @@
 // src/services/otpService.js
 const { sendSms } = require('./smsService');
-const { sendEmail } = require('./emailService');
+const { sendOtpEmail } = require('./emailService');
 
-// In-memory store for OTPs (for demonstration purposes)
-// In a real application, use Redis or a database for production
-const otpStore = new Map();
+// This service will now primarily handle OTP generation and verification logic,
+// while the actual sending is delegated to emailService or smsService.
 
-const generateOtp = () => {
+const generateOtpSecret = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 };
 
-const setOtp = (identifier, otp) => {
-    otpStore.set(identifier, otp);
-    // Set a timeout to clear the OTP after a certain period (e.g., 5 minutes)
-    setTimeout(() => {
-        otpStore.delete(identifier);
-    }, 5 * 60 * 1000); // 5 minutes
+// This verifyOtp function is for comparing the provided OTP with the stored secret
+const verifyOtp = (storedSecret, providedOtp) => {
+    return storedSecret === providedOtp;
 };
 
-const verifyOtp = (identifier, otp) => {
-    const storedOtp = otpStore.get(identifier);
-    if (storedOtp && storedOtp === otp) {
-        otpStore.delete(identifier); // OTP consumed
-        return true;
+// This function is for sending OTPs, it will use the emailService or smsService
+const sendOtpToUser = async (userIdentifier, type = 'sms', otp) => {
+    if (!otp) {
+        console.error('OTP must be provided to sendOtpToUser');
+        return false;
     }
-    return false;
-};
-
-const sendOtpToUser = async (userIdentifier, type = 'sms') => {
-    const otp = generateOtp();
-    setOtp(userIdentifier, otp);
 
     if (type === 'sms') {
+        // Assuming sendSms takes identifier and otp
         return sendSms(userIdentifier, otp);
     } else if (type === 'email') {
-        const subject = 'Your FarmGrid Verification Code';
-        const html = `<p>Your verification code is: <strong>${otp}</strong>. Do not share this code.</p>`;
-        return sendEmail(userIdentifier, subject, html);
+        // sendOtpEmail already handles subject and template
+        return sendOtpEmail(userIdentifier, otp);
     }
     return false;
 };
 
 module.exports = {
-    generateOtp,
-    setOtp,
+    generateOtpSecret,
     verifyOtp,
-    sendOtpToUser
+    sendOtpToUser,
 };

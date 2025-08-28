@@ -1,28 +1,77 @@
-// src/services/emailService.js
+const nodemailer = require('nodemailer');
 const config = require('../config/config');
+const welcomeEmailTemplate = require('../templates/emails/welcome');
+const otpEmailTemplate = require('../templates/emails/otp');
+const passwordResetEmailTemplate = require('../templates/emails/passwordReset');
+const passwordlessLoginEmailTemplate = require('../templates/emails/passwordlessLogin');
+const accountCreatedEmailTemplate = require('../templates/emails/accountCreated');
+
+const transporter = nodemailer.createTransport({
+    host: config.email.host,
+    port: config.email.port,
+    secure: config.email.encryption === 'ssl', // true for 465, false for other ports
+    auth: {
+        user: config.email.username,
+        pass: config.email.password,
+    },
+    tls: {
+        ciphers: 'SSLv3'
+    }
+});
 
 const sendEmail = async (to, subject, html) => {
-    // Placeholder for email sending logic (e.g., SendGrid, Nodemailer)
-    console.log(`Sending email to ${to} with subject: ${subject}`);
-    console.log('Email content:', html);
-    // In a real application, you would integrate with an email API here.
-    // Example:
-    // try {
-    //     const response = await axios.post('EMAIL_PROVIDER_API_ENDPOINT', {
-    //         apiKey: config.email.apiKey,
-    //         to,
-    //         subject,
-    //         html
-    //     });
-    //     console.log('Email sent successfully:', response.data);
-    //     return true;
-    // } catch (error) {
-    //     console.error('Failed to send email:', error);
-    //     return false;
-    // }
-    return true; // Simulate success
+    try {
+        const mailOptions = {
+            from: `"${config.email.fromName}" <${config.email.fromAddress}>`,
+            to,
+            subject,
+            html,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully:', info.messageId);
+        return true;
+    } catch (error) {
+        console.error('Failed to send email:', error);
+        return false;
+    }
+};
+
+const sendWelcomeEmail = async (to, username) => {
+    const subject = 'Welcome to FarmGrid!';
+    const html = welcomeEmailTemplate(username);
+    return sendEmail(to, subject, html);
+};
+
+const sendOtpEmail = async (to, otp) => {
+    const subject = 'Your FarmGrid One-Time Password (OTP)';
+    const html = otpEmailTemplate(otp);
+    return sendEmail(to, subject, html);
+};
+
+const sendPasswordResetEmail = async (to, resetLink) => {
+    const subject = 'FarmGrid Password Reset Request';
+    const html = passwordResetEmailTemplate(resetLink);
+    return sendEmail(to, subject, html);
+};
+
+const sendPasswordlessLoginEmail = async (to, loginLink) => {
+    const subject = 'FarmGrid Passwordless Login';
+    const html = passwordlessLoginEmailTemplate(loginLink);
+    return sendEmail(to, subject, html);
+};
+
+const sendAccountCreatedEmail = async (to, username, email, password) => {
+    const subject = 'Your FarmGrid Account Details';
+    const html = accountCreatedEmailTemplate(username, email, password);
+    return sendEmail(to, subject, html);
 };
 
 module.exports = {
-    sendEmail
+    sendEmail,
+    sendWelcomeEmail,
+    sendOtpEmail,
+    sendPasswordResetEmail,
+    sendPasswordlessLoginEmail,
+    sendAccountCreatedEmail,
 };

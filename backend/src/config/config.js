@@ -1,24 +1,33 @@
-const express = require('express');
-const cors = require('cors');
-const config = require('./src/config/config.js');
+require('dotenv').config();
 
-
-const app = express();
-const PORT = config.app.port;
-
-app.use(cors({ origin: config.cors.origin }));
-
-
-app.use(express.json());
-
-
-app.get('/', (req, res) => {
-  res.json({ message: `Welcome to the FarmGrid API! Running in ${config.app.env} mode.` });
-});
-
-// TODO: Import and use API routes here
-
-
-app.listen(PORT, () => {
-  console.log(`[server]: Server is running at http://localhost:${PORT}`);
-});
+module.exports = {
+    app: {
+        name: process.env.APP_NAME || 'FarmGrid',
+        port: process.env.PORT || 3333,
+        env: process.env.NODE_ENV || 'development',
+    },
+    database: {
+        host: process.env.DB_HOST || '127.0.0.1',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || 'root',
+        name: process.env.DB_NAME || 'farmgrid_dev',
+    },
+    jwt: {
+        secret: process.env.JWT_SECRET || 'supersecretjwtkey',
+        expiresIn: process.env.JWT_EXPIRES_IN || '1d',
+    },
+    cors: {
+        origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    },
+    email: {
+        mailer: process.env.MAIL_MAILER || 'smtp',
+        host: process.env.MAIL_HOST || 'smtp.mailgun.org',
+        port: parseInt(process.env.MAIL_PORT, 10) || 587,
+        username: process.env.MAIL_USERNAME || 'postmaster@pixelacademyafrica.uk',
+        password: process.env.MAIL_PASSWORD || 'pixelacademy@2025!*',
+        encryption: process.env.MAIL_ENCRYPTION || 'tls',
+        fromAddress: process.env.MAIL_FROM_ADDRESS || 'postmaster@pixelacademyafrica.uk',
+        fromName: process.env.APP_NAME || 'FarmGrid',
+    },
+};
