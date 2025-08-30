@@ -5,21 +5,12 @@ const {
     recordCollection,
     getCollections,
     getCollectionById,
-    updateCollection,
-    deleteCollection,
+    deactivateCollection,
 } = require('../controllers/collectionController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
-// All collection routes are protected
-router.use(protect);
 
-router.route('/')
-    .post(recordCollection)
-    .get(getCollections);
-
-router.route('/:id')
-    .get(getCollectionById)
-    .put(updateCollection)
-    .delete(deleteCollection);
+router.get('/:id', protect, authorize(['COOP_ADMIN', 'SYSTEM_ADMIN']), getCollectionById);
+router.patch('/:id/deactivate', protect, authorize(['COOP_ADMIN', 'SYSTEM_ADMIN']), deactivateCollection);
 
 module.exports = router;

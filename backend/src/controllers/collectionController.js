@@ -72,46 +72,24 @@ const getCollectionById = async (req, res) => {
     }
 };
 
-// @desc    Update produce collection details
-// @route   PUT /api/collections/:id
-// @access  Private (Coop Admin, System Admin)
-const updateCollection = async (req, res) => {
-    const { quantity, status } = req.body;
 
+// @desc    Deactivate a produce collection
+// @route   PATCH /api/collections/:id/deactivate
+// @access  Private (Coop Admin, System Admin)
+const deactivateCollection = async (req, res) => {
     try {
         const updatedRows = await db('produce_collections')
             .where({ id: req.params.id })
-            .update({
-                quantity: quantity ? parseFloat(quantity) : undefined,
-                status,
-            });
+            .update({ is_active: false });
 
         if (updatedRows === 0) {
             return res.status(404).json({ message: 'Collection not found' });
         }
 
-        res.status(200).json({ message: 'Collection updated successfully' });
+        res.status(200).json({ message: 'Collection deactivated successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error updating collection' });
-    }
-};
-
-// @desc    Delete a produce collection
-// @route   DELETE /api/collections/:id
-// @access  Private (Coop Admin, System Admin)
-const deleteCollection = async (req, res) => {
-    try {
-        const deletedRows = await db('produce_collections').where({ id: req.params.id }).del();
-
-        if (deletedRows === 0) {
-            return res.status(404).json({ message: 'Collection not found' });
-        }
-
-        res.status(200).json({ message: 'Collection deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error deleting collection' });
+        res.status(500).json({ message: 'Server error deactivating collection' });
     }
 };
 
@@ -119,6 +97,5 @@ module.exports = {
     recordCollection,
     getCollections,
     getCollectionById,
-    updateCollection,
-    deleteCollection,
+    deactivateCollection,
 };

@@ -5,19 +5,12 @@ const {
     recordPayment,
     getPayments,
     getPaymentById,
-    updatePayment,
+    deactivatePayment,
 } = require('../controllers/paymentController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
-// All payment routes are protected
-router.use(protect);
 
-router.route('/')
-    .post(recordPayment)
-    .get(getPayments);
-
-router.route('/:id')
-    .get(getPaymentById)
-    .put(updatePayment);
+router.get('/:id', protect, authorize(['BUYER_ADMIN', 'COOP_ADMIN', 'SYSTEM_ADMIN']), getPaymentById);
+router.patch('/:id/deactivate', protect, authorize(['BUYER_ADMIN', 'COOP_ADMIN', 'SYSTEM_ADMIN']), deactivatePayment);
 
 module.exports = router;

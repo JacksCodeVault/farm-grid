@@ -72,49 +72,24 @@ const getFarmerById = async (req, res) => {
     }
 };
 
-// @desc    Update farmer details
-// @route   PUT /api/farmers/:id
-// @access  Private (Coop Admin, System Admin)
-const updateFarmer = async (req, res) => {
-    const { first_name, last_name, phone_number, cooperative_id, village_id } = req.body;
 
+// @desc    Deactivate a farmer
+// @route   PATCH /api/farmers/:id/deactivate
+// @access  Private (Coop Admin, System Admin, Board Member)
+const deactivateFarmer = async (req, res) => {
     try {
         const updatedRows = await db('farmers')
             .where({ id: req.params.id })
-            .update({
-                first_name,
-                last_name,
-                phone_number,
-                cooperative_id,
-                village_id,
-            });
+            .update({ is_active: false });
 
         if (updatedRows === 0) {
             return res.status(404).json({ message: 'Farmer not found' });
         }
 
-        res.status(200).json({ message: 'Farmer updated successfully' });
+        res.status(200).json({ message: 'Farmer deactivated successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error updating farmer' });
-    }
-};
-
-// @desc    Delete a farmer
-// @route   DELETE /api/farmers/:id
-// @access  Private (Coop Admin, System Admin)
-const deleteFarmer = async (req, res) => {
-    try {
-        const deletedRows = await db('farmers').where({ id: req.params.id }).del();
-
-        if (deletedRows === 0) {
-            return res.status(404).json({ message: 'Farmer not found' });
-        }
-
-        res.status(200).json({ message: 'Farmer deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error deleting farmer' });
+        res.status(500).json({ message: 'Server error deactivating farmer' });
     }
 };
 
@@ -122,6 +97,5 @@ module.exports = {
     registerFarmer,
     getFarmers,
     getFarmerById,
-    updateFarmer,
-    deleteFarmer,
+    deactivateFarmer,
 };

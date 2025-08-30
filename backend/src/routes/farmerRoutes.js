@@ -5,21 +5,12 @@ const {
     registerFarmer,
     getFarmers,
     getFarmerById,
-    updateFarmer,
-    deleteFarmer,
+    deactivateFarmer,
 } = require('../controllers/farmerController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
-// All farmer routes are protected
-router.use(protect);
 
-router.route('/')
-    .post(registerFarmer)
-    .get(getFarmers);
-
-router.route('/:id')
-    .get(getFarmerById)
-    .put(updateFarmer)
-    .delete(deleteFarmer);
+router.get('/:id', protect, authorize(['COOP_ADMIN', 'SYSTEM_ADMIN']), getFarmerById);
+router.patch('/:id/deactivate', protect, authorize(['COOP_ADMIN', 'SYSTEM_ADMIN']), deactivateFarmer);
 
 module.exports = router;

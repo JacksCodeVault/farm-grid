@@ -120,7 +120,107 @@ const createUser = async (req, res) => {
     }
 };
 
+// @desc    Get all users
+// @route   GET /api/v1/users
+// @access  Private/Admin
+const getUsers = async (req, res) => {
+    try {
+        const users = await db('users').select('id', 'name', 'email', 'role', 'organization_id', 'is_active');
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get single user by ID
+// @route   GET /api/v1/users/:id
+// @access  Private/Admin
+const getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await db('users').where({ id }).select('id', 'name', 'email', 'role', 'organization_id', 'is_active').first();
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        console.error('Error fetching user by ID:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update user
+// @route   PATCH /api/v1/users/:id
+// @access  Private/Admin
+const updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { name, email, phone_number, role, organization_id, is_active } = req.body;
+    const requestingUser = req.user;
+
+    try {
+        const userToUpdate = await db('users').where({ id }).first();
+        if (!userToUpdate) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Only SYSTEM_ADMIN can update roles and organization_id
+        if (requestingUser.role !== 'SYSTEM_ADMIN' && (role || organization_id)) {
+            return res.status(403).json({ message: 'Only SYSTEM_ADMIN can update user roles or organization_id.' });
+        }
+
+        const updatedUser = await db('users').where({ id }).update({
+            name: name || userToUpdate.name,
+            email: email || userToUpdate.email,
+            phone_number: phone_number || userToUpdate.phone_number,
+            role: role || userToUpdate.role,
+            organization_id: organization_id || userToUpdate.organization_id,
+            is_active: is_active !== undefined ? is_active : userToUpdate.is_active,
+            updated_at: db.fn.now()
+        }).returning('*');
+
+        res.status(200).json({
+            message: 'User updated successfully',
+            user: {
+                id: updatedUser[0].id,
+                name: updatedUser[0].name,
+                email: updatedUser[0].email,
+                role: updatedUser[0].role,
+                organization_id: updatedUser[0].organization_id,
+                is_active: updatedUser[0].is_active
+            }
+        });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Delete user
+// @route   DELETE /api/v1/users/:id
+// @access  Private/Admin
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deletedCount = await db('users').where({ id }).del();
+
+        if (deletedCount === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     getMe,
     createUser,
+    getUsers,
+    getUserById,
+    updateUser,
+    deleteUser,
 };

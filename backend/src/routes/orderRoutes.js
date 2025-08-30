@@ -5,21 +5,12 @@ const {
     placeOrder,
     getOrders,
     getOrderById,
-    updateOrder,
-    deleteOrder,
+    deactivateOrder,
 } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
-// All order routes are protected
-router.use(protect);
 
-router.route('/')
-    .post(placeOrder)
-    .get(getOrders);
-
-router.route('/:id')
-    .get(getOrderById)
-    .put(updateOrder)
-    .delete(deleteOrder);
+router.get('/:id', protect, authorize(['BUYER_ADMIN', 'COOP_ADMIN', 'SYSTEM_ADMIN']), getOrderById);
+router.patch('/:id/deactivate', protect, authorize(['COOP_ADMIN', 'SYSTEM_ADMIN']), deactivateOrder);
 
 module.exports = router;

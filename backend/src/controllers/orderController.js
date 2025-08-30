@@ -66,46 +66,24 @@ const getOrderById = async (req, res) => {
     }
 };
 
-// @desc    Update order details
-// @route   PUT /api/orders/:id
-// @access  Private (Seller, System Admin)
-const updateOrder = async (req, res) => {
-    const { status, requested_quantity } = req.body;
 
+// @desc    Deactivate an order
+// @route   PATCH /api/orders/:id/deactivate
+// @access  Private (Coop Admin, System Admin)
+const deactivateOrder = async (req, res) => {
     try {
         const updatedRows = await db('orders')
             .where({ id: req.params.id })
-            .update({
-                status,
-                requested_quantity: requested_quantity ? parseFloat(requested_quantity) : undefined,
-            });
+            .update({ is_active: false });
 
         if (updatedRows === 0) {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        res.status(200).json({ message: 'Order updated successfully' });
+        res.status(200).json({ message: 'Order deactivated successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error updating order' });
-    }
-};
-
-// @desc    Delete an order
-// @route   DELETE /api/orders/:id
-// @access  Private (System Admin)
-const deleteOrder = async (req, res) => {
-    try {
-        const deletedRows = await db('orders').where({ id: req.params.id }).del();
-
-        if (deletedRows === 0) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        res.status(200).json({ message: 'Order deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error deleting order' });
+        res.status(500).json({ message: 'Server error deactivating order' });
     }
 };
 
@@ -113,6 +91,5 @@ module.exports = {
     placeOrder,
     getOrders,
     getOrderById,
-    updateOrder,
-    deleteOrder,
+    deactivateOrder,
 };

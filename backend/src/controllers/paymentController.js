@@ -66,28 +66,24 @@ const getPaymentById = async (req, res) => {
     }
 };
 
-// @desc    Update payment details
-// @route   PUT /api/payments/:id
-// @access  Private (System Admin)
-const updatePayment = async (req, res) => {
-    const { amount, status } = req.body;
 
+// @desc    Deactivate a payment
+// @route   PATCH /api/payments/:id/deactivate
+// @access  Private (Buyer Admin, Coop Admin, System Admin)
+const deactivatePayment = async (req, res) => {
     try {
         const updatedRows = await db('payments')
             .where({ id: req.params.id })
-            .update({
-                amount: amount ? parseFloat(amount) : undefined,
-                status,
-            });
+            .update({ is_active: false });
 
         if (updatedRows === 0) {
             return res.status(404).json({ message: 'Payment not found' });
         }
 
-        res.status(200).json({ message: 'Payment updated successfully' });
+        res.status(200).json({ message: 'Payment deactivated successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error updating payment' });
+        res.status(500).json({ message: 'Server error deactivating payment' });
     }
 };
 
@@ -95,5 +91,5 @@ module.exports = {
     recordPayment,
     getPayments,
     getPaymentById,
-    updatePayment,
+    deactivatePayment,
 };
