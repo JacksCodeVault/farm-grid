@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -19,6 +18,7 @@ const coopAdminRoutes = require('./src/routes/coopAdminRoutes');
 const organizationRoutes = require('./src/routes/organizationRoutes');
 const commodityRoutes = require('./src/routes/commodityRoutes');
 const geographyRoutes = require('./src/routes/geographyRoutes');
+const deliveryRoutes = require('./src/routes/deliveryRoutes');
 
 app.use(cors());
 app.use(express.json());
@@ -56,6 +56,8 @@ app.use('/api/v1/organizations', organizationRoutes);
 app.use('/api/v1/commodities', commodityRoutes);
 // Geography routes
 app.use('/api/v1/geography', geographyRoutes);
+// Delivery routes
+app.use('/api/v1/deliveries', deliveryRoutes);
 
 app.listen(PORT, () => {
   console.log(`[server]: Server is running at http://localhost:${PORT}`);

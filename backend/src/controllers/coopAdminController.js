@@ -2,7 +2,7 @@ const db = require('../db/database');
 const bcrypt = require('bcryptjs');
 
 exports.createFieldOperator = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { name, email, phone_number } = req.body;
   const coopAdminId = req.user.id; // Assuming req.user contains the authenticated COOP_ADMIN's ID
 
   try {
@@ -12,22 +12,29 @@ exports.createFieldOperator = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: COOP_ADMIN not found or not associated with an organization.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Generate a strong random password
+    const randomPassword = require('crypto').randomBytes(16).toString('hex');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
-    const [newFieldOperator] = await db('users').insert({
-      username,
+    const result = await db('users').insert({
+      name,
       email,
+      phone_number,
       password: hashedPassword,
       role: 'FIELD_OPERATOR',
       organization_id: coopAdmin.organization_id // Link to the COOP_ADMIN's organization
-    }).returning('*');
+    });
+    const userId = result[0];
+    const newFieldOperator = await db('users').where({ id: userId }).first();
 
     res.status(201).json({
       message: 'FIELD_OPERATOR created successfully',
       user: {
         id: newFieldOperator.id,
-        username: newFieldOperator.username,
+        name: newFieldOperator.name,
         email: newFieldOperator.email,
+        phone_number: newFieldOperator.phone_number,
         role: newFieldOperator.role,
         organization_id: newFieldOperator.organization_id
       }

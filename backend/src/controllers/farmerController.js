@@ -3,7 +3,7 @@ const db = require('../db/database');
 
 // @desc    Register a new farmer
 // @route   POST /api/farmers
-// @access  Private (Coop Admin, System Admin)
+// @access  Private (Field Operator only)
 const registerFarmer = async (req, res) => {
     const { first_name, last_name, phone_number, cooperative_id, village_id } = req.body;
     const registered_by_user_id = req.user.id; // Assuming user ID is available from auth middleware
@@ -39,7 +39,11 @@ const registerFarmer = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error during farmer registration' });
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            res.status(409).json({ message: 'Cannot register farmer: the specified village does not exist. Please provide a valid village_id.' });
+        } else {
+            res.status(500).json({ message: 'Server error during farmer registration' });
+        }
     }
 };
 
@@ -93,9 +97,40 @@ const deactivateFarmer = async (req, res) => {
     }
 };
 
+// @desc    Update farmer details
+// @route   PATCH /api/farmers/:id
+// @access  Private (All roles)
+const updateFarmer = async (req, res) => {
+    const { first_name, last_name, phone_number, cooperative_id, village_id } = req.body;
+    try {
+        const updatedRows = await db('farmers')
+            .where({ id: req.params.id })
+            .update({
+                first_name,
+                last_name,
+                phone_number,
+                cooperative_id,
+                village_id
+            });
+        if (updatedRows === 0) {
+            return res.status(404).json({ message: 'Farmer not found' });
+        }
+        const updatedFarmer = await db('farmers').where({ id: req.params.id }).first();
+        res.status(200).json({ message: 'Farmer updated successfully', farmer: updatedFarmer });
+    } catch (error) {
+        console.error(error);
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            res.status(409).json({ message: 'Cannot update farmer: the specified village does not exist. Please provide a valid village_id.' });
+        } else {
+            res.status(500).json({ message: 'Server error updating farmer' });
+        }
+    }
+};
+
 module.exports = {
     registerFarmer,
     getFarmers,
     getFarmerById,
     deactivateFarmer,
+    updateFarmer
 };

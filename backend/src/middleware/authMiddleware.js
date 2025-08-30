@@ -14,7 +14,7 @@ const protect = async (req, res, next) => {
             const decoded = jwt.verify(token, config.jwt.secret);
 
             // Attach user to the request
-            req.user = await db('users').where({ id: decoded.id }).select('id', 'name', 'email', 'role').first();
+            req.user = await db('users').where({ id: decoded.id }).select('id', 'name', 'email', 'role', 'organization_id').first();
 
             if (!req.user) {
                 return res.status(401).json({ message: 'Not authorized, user not found' });

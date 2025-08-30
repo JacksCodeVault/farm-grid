@@ -1,39 +1,39 @@
 // src/controllers/paymentController.js
 const db = require('../db/database');
 
-// @desc    Record a new payment
+// @desc    Record a bulk payment for a delivery
 // @route   POST /api/payments
-// @access  Private (Buyer, System Admin)
+// @access  Private (BUYER_ADMIN, SYSTEM_ADMIN)
 const recordPayment = async (req, res) => {
-    const { delivery_id, amount, transaction_reference } = req.body;
-    const buyer_id = req.user.organization_id; // Assuming buyer is the user's organization
-
-    if (!delivery_id || !amount || !transaction_reference) {
-        return res.status(400).json({ message: 'Please provide delivery_id, amount, and transaction_reference' });
-    }
-
+    console.log('Payment request body:', req.body);
+    const { deliveryId, amount, transactionReference } = req.body;
+        // Get paid_by from authenticated user session
+        const paid_by = req.user && req.user.role ? req.user.role : 'UNKNOWN';
     try {
+        // Find delivery
+        const delivery = await db('deliveries').where({ id: deliveryId }).first();
+        if (!delivery) {
+            return res.status(404).json({ message: 'Delivery not found.' });
+        }
+        if (delivery.status !== 'VERIFIED') {
+            return res.status(400).json({ message: 'Delivery must be VERIFIED before payment.' });
+        }
+        // Create payment record
         const [paymentId] = await db('payments').insert({
-            delivery_id,
-            buyer_id,
+            delivery_id: deliveryId,
             amount: parseFloat(amount),
-            transaction_reference,
-            status: 'COMPLETED',
+            transaction_reference: transactionReference,
+            paid_by: paid_by,
+            paid_to: delivery.seller_id,
+            buyer_id: req.user.organization_id,
+            payment_date: db.fn.now()
         });
-
-        res.status(201).json({
-            message: 'Payment recorded successfully',
-            payment: {
-                id: paymentId,
-                delivery_id,
-                buyer_id,
-                amount,
-                transaction_reference,
-            },
-        });
+        // Update delivery status to PAID
+        await db('deliveries').where({ id: deliveryId }).update({ status: 'PAID', updated_at: db.fn.now() });
+        res.status(201).json({ message: 'Payment recorded and delivery marked as PAID.', payment_id: paymentId });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error recording payment' });
+        res.status(500).json({ message: 'Server error recording payment.' });
     }
 };
 

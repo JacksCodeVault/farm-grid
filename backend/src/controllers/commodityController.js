@@ -1,20 +1,19 @@
 const db = require('../db/database');
 
 exports.createCommodity = async (req, res) => {
-  const { name, unit_of_measure } = req.body;
+  const { name, standard_unit } = req.body;
 
-  if (!name || !unit_of_measure) {
-    return res.status(400).json({ message: 'Please provide name and unit of measure for the commodity.' });
+  if (!name || !standard_unit) {
+    return res.status(400).json({ message: 'Please provide name and standard unit for the commodity.' });
   }
 
   try {
     await db('commodities').insert({
       name,
-      unit_of_measure,
-      is_active: true
+      standard_unit
     });
 
-    const [newCommodity] = await db('commodities').where({ name, unit_of_measure }).orderBy('id', 'desc').limit(1);
+    const [newCommodity] = await db('commodities').where({ name, standard_unit }).orderBy('id', 'desc').limit(1);
 
     res.status(201).json({
       message: 'Commodity created successfully',
@@ -28,7 +27,7 @@ exports.createCommodity = async (req, res) => {
 
 exports.getCommodities = async (req, res) => {
   try {
-    const commodities = await db('commodities').select('id', 'name', 'unit_of_measure', 'is_active');
+    const commodities = await db('commodities').select('id', 'name', 'standard_unit');
     res.status(200).json(commodities);
   } catch (error) {
     console.error('Error fetching commodities:', error);
@@ -39,7 +38,7 @@ exports.getCommodities = async (req, res) => {
 exports.getCommodityById = async (req, res) => {
   try {
     const { id } = req.params;
-    const commodity = await db('commodities').where({ id }).select('id', 'name', 'unit_of_measure', 'is_active').first();
+  const commodity = await db('commodities').where({ id }).select('id', 'name', 'standard_unit').first();
 
     if (!commodity) {
       return res.status(404).json({ message: 'Commodity not found' });
@@ -63,9 +62,7 @@ exports.updateCommodity = async (req, res) => {
 
     await db('commodities').where({ id }).update({
       name: name || commodityToUpdate.name,
-      unit_of_measure: unit_of_measure || commodityToUpdate.unit_of_measure,
-      is_active: is_active !== undefined ? is_active : commodityToUpdate.is_active,
-      updated_at: db.fn.now()
+      standard_unit: req.body.standard_unit || commodityToUpdate.standard_unit
     });
 
     const updatedCommodity = await db('commodities').where({ id }).first();

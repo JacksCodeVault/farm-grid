@@ -80,7 +80,7 @@ const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
     try {
-        const [userId] = await db('users').insert({
+        const result = await db('users').insert({
             name,
             email,
             password: hashedPassword,
@@ -89,6 +89,7 @@ const createUser = async (req, res) => {
             organization_id: req.body.organization_id, // Use potentially updated organization_id
             is_active: true,
         });
+        const userId = result[0];
 
         const newUser = await db('users').where({ id: userId }).first();
 
@@ -170,7 +171,7 @@ const updateUser = async (req, res) => {
             return res.status(403).json({ message: 'Only SYSTEM_ADMIN can update user roles or organization_id.' });
         }
 
-        const updatedUser = await db('users').where({ id }).update({
+        await db('users').where({ id }).update({
             name: name || userToUpdate.name,
             email: email || userToUpdate.email,
             phone_number: phone_number || userToUpdate.phone_number,
@@ -178,17 +179,23 @@ const updateUser = async (req, res) => {
             organization_id: organization_id || userToUpdate.organization_id,
             is_active: is_active !== undefined ? is_active : userToUpdate.is_active,
             updated_at: db.fn.now()
-        }).returning('*');
+        });
+
+        const updatedUser = await db('users').where({ id }).first();
+
+        if (!updatedUser) {
+            return res.status(500).json({ message: 'Failed to retrieve updated user data.' });
+        }
 
         res.status(200).json({
             message: 'User updated successfully',
             user: {
-                id: updatedUser[0].id,
-                name: updatedUser[0].name,
-                email: updatedUser[0].email,
-                role: updatedUser[0].role,
-                organization_id: updatedUser[0].organization_id,
-                is_active: updatedUser[0].is_active
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                organization_id: updatedUser.organization_id,
+                is_active: updatedUser.is_active
             }
         });
     } catch (error) {
