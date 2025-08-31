@@ -123,7 +123,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 1.0 }}
           >
             <motion.a
-              href="/api-docs" // Link to your documentation page
+              href="https://farmgrid.robotech.co.ke/api-docs" // Link to your documentation page
               className="inline-block px-8 py-3 rounded-full bg-white/10 border-2 border-white/30 text-white font-medium text-sm transition-all duration-300 hover:bg-white/20 hover:border-cyan-400/50 backdrop-blur-sm"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
