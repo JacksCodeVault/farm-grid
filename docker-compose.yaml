@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  farmgrid-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: farmgrid-backend
+    ports:
+      - "8005:3333"
+    restart: always
+    environment:
+      - APP_NAME=FarmGrid
+      - PORT=3333
+      - DB_HOST=host.docker.internal # Database will be used from the host
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_NAME=farmgrid_dev
+      - CORS_ORIGIN=https://farmgrid.robotech.co.ke # Assuming frontend will be deployed here
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=smtp.mailgun.org
+      - MAIL_PORT=587
+      - MAIL_USERNAME=postmaster@pixelacademyafrica.uk
+      - MAIL_PASSWORD=pixelacademy@2025!*
+      - MAIL_ENCRYPTION=tls
+      - MAIL_FROM_ADDRESS=postmaster@pixelacademyafrica.uk
+      - JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+      - JWT_EXPIRES_IN=1d
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - ENEZA_SMS_API_KEY=6fa0204dee21eabdc9b605cb855eac8c
+      - ENEZA_SMS_PARTNER_ID=11603
+      - ENEZA_SMS_SHORTCODE=PIXEL LTD.
+      - ENEZA_SMS_API_URL=https://bulk.enezasms.com/api/services/sendsms
+      - ENEZA_SMS_BULK_API_URL=https://bulk.enezasms.com/api/services/sendbulk
+      - TEST_SMS_PHONE=254112407259
+
+  farmgrid-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: farmgrid-web
+    ports:
+      - "8004:5173"
+    restart: always
+    depends_on:
+      - farmgrid-backend
+    environment:
+      - VITE_API_BASE_URL=https://api-farmgrid.robotech.co.ke/api/v1 # Live server URL
+      - VITE_AUTH_TOKEN_KEY=auth_token
+      - VITE_USER_KEY=user
+      - VITE_APP_NAME=FarmGrid
+      - VITE_APP_LOGO=/assets/logo.svg
+      - VITE_ENABLE_ANALYTICS=false
+      - VITE_ENABLE_PWA=false
