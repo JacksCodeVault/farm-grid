@@ -17,6 +17,7 @@ export default defineConfig({
   },
   server: {
     host: true, // Make the server accessible from outside the container
+    allowedHosts: ['farmgrid.robotech.co.ke'], // Allow the live server host
     proxy: {
       '/api': {
         target: 'http://localhost:3333',
