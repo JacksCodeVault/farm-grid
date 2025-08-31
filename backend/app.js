@@ -22,7 +22,7 @@ const deliveryRoutes = require('./src/routes/deliveryRoutes');
 const farmRoutes = require('./src/routes/farmRoutes');
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN,
   credentials: true
 }));
 app.use(express.json());
