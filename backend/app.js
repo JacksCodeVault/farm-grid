@@ -19,8 +19,12 @@ const organizationRoutes = require('./src/routes/organizationRoutes');
 const commodityRoutes = require('./src/routes/commodityRoutes');
 const geographyRoutes = require('./src/routes/geographyRoutes');
 const deliveryRoutes = require('./src/routes/deliveryRoutes');
+const farmRoutes = require('./src/routes/farmRoutes');
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -35,7 +39,7 @@ app.get('/', (req, res) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Auth routes
-app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 // User routes
 app.use('/api/v1/users', userRoutes);
 // COOP_ADMIN routes
@@ -57,6 +61,9 @@ app.use('/api/v1/commodities', commodityRoutes);
 // Geography routes
 app.use('/api/v1/geography', geographyRoutes);
 // Delivery routes
+
+// Farm routes
+app.use('/api/v1/farms', farmRoutes);
 app.use('/api/v1/deliveries', deliveryRoutes);
 
 app.listen(PORT, () => {

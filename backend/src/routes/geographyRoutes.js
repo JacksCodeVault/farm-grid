@@ -23,7 +23,7 @@ router.delete('/districts/:id', protect, authorize(['SYSTEM_ADMIN']), deleteDist
 
 // Villages
 router.post('/villages', protect, authorize(['SYSTEM_ADMIN']), createVillage);
-router.get('/villages', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER']), getVillages);
+router.get('/villages', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER', 'COOP_ADMIN']), getVillages);
 router.get('/villages/:id', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER']), getVillageById);
 router.patch('/villages/:id', protect, authorize(['SYSTEM_ADMIN']), updateVillage);
 router.delete('/villages/:id', protect, authorize(['SYSTEM_ADMIN']), deleteVillage);

@@ -183,6 +183,26 @@ const acceptOrder = async (req, res) => {
     }
 };
 
+// @desc    Activate an order
+// @route   PATCH /api/orders/:id/activate
+// @access  Private (Coop Admin, System Admin)
+const activateOrder = async (req, res) => {
+    try {
+        const updatedRows = await db('orders')
+            .where({ id: req.params.id })
+            .update({ is_active: true });
+
+        if (updatedRows === 0) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        res.status(200).json({ message: 'Order activated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error activating order' });
+    }
+};
+
 module.exports = {
     placeOrder,
     getOrders,
@@ -192,4 +212,5 @@ module.exports = {
     updateOrder,
     updateOrderStatus,
     acceptOrder,
+    activateOrder,
 };

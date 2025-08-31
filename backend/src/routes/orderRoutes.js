@@ -1,4 +1,4 @@
-// src/routes/orderRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const {
@@ -6,10 +6,13 @@ const {
     getOrders,
     getOrderById,
     deactivateOrder,
+    activateOrder,
     getMyOrders,
     acceptOrder,
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+// Activate an order
+router.patch('/:id/activate', protect, authorize(['COOP_ADMIN']), activateOrder);
 
 
 router.get('/', protect, authorize(['BUYER_ADMIN', 'COOP_ADMIN', 'SYSTEM_ADMIN']), getOrders);

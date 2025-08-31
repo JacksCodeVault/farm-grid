@@ -64,6 +64,7 @@ const updateDeliveryStatus = async (req, res) => {
             updated_at: db.fn.now()
         });
         const updatedDelivery = await db('deliveries').where({ id: deliveryId }).first();
+        console.log('[DELIVERED] Delivery result:', updatedDelivery);
         res.status(200).json({ message: 'Delivery updated successfully.', delivery: updatedDelivery });
     } catch (error) {
         console.error(error);

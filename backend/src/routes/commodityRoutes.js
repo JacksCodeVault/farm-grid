@@ -5,8 +5,8 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 // SYSTEM_ADMIN can create commodities
 router.post('/', protect, authorize(['SYSTEM_ADMIN']), createCommodity);
-router.get('/', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER']), getCommodities);
-router.get('/:id', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER']), getCommodityById);
+router.get('/', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER', 'BUYER_ADMIN']), getCommodities);
+router.get('/:id', protect, authorize(['SYSTEM_ADMIN', 'BOARD_MEMBER', 'BUYER_ADMIN']), getCommodityById);
 router.patch('/:id', protect, authorize(['SYSTEM_ADMIN']), updateCommodity);
 router.delete('/:id', protect, authorize(['SYSTEM_ADMIN']), deleteCommodity);
 

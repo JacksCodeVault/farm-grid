@@ -23,20 +23,36 @@ exports.createFieldOperator = async (req, res) => {
       phone_number,
       password: hashedPassword,
       role: 'FIELD_OPERATOR',
-      organization_id: coopAdmin.organization_id // Link to the COOP_ADMIN's organization
+      organization_id: coopAdmin.organization_id,
+      is_active: true,
+      created_at: db.fn.now(),
+      updated_at: db.fn.now()
     });
     const userId = result[0];
+    // Generate password reset token and expiry
+    const resetToken = require('crypto').randomBytes(32).toString('hex');
+    const passwordResetExpires = Date.now() + 3600000; // 1 hour
+    await db('users').where({ id: userId }).update({
+      password_reset_token: resetToken,
+      password_reset_expires: passwordResetExpires,
+    });
+    // Send password reset email
+    const config = require('../config/config');
+    const { sendPasswordResetEmail } = require('../services/emailService');
+    const resetUrl = `${config.frontendUrl}/reset-password?token=${resetToken}`;
+    await sendPasswordResetEmail(email, name, resetUrl);
     const newFieldOperator = await db('users').where({ id: userId }).first();
 
     res.status(201).json({
-      message: 'FIELD_OPERATOR created successfully',
+      message: 'FIELD_OPERATOR created successfully. Password reset email sent.',
       user: {
         id: newFieldOperator.id,
         name: newFieldOperator.name,
         email: newFieldOperator.email,
         phone_number: newFieldOperator.phone_number,
         role: newFieldOperator.role,
-        organization_id: newFieldOperator.organization_id
+        organization_id: newFieldOperator.organization_id,
+        is_active: newFieldOperator.is_active
       }
     });
   } catch (error) {

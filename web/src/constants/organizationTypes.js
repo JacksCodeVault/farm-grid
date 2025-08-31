@@ -1,0 +1,6 @@
+export const ORGANIZATION_TYPES = [
+  "COOPERATIVE",
+  "PROCESSOR",
+  "BUYER",
+  "EXPORTER"
+];
