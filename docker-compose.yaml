@@ -15,7 +15,7 @@ services:
       - DB_HOST=host.docker.internal # Database will be used from the host
       - DB_PORT=3306
       - DB_USER=root
-      - DB_PASSWORD=root
+      - DB_PASSWORD=ghost24
       - DB_NAME=farmgrid_dev
       - CORS_ORIGIN=https://farmgrid.robotech.co.ke # Assuming frontend will be deployed here
       - MAIL_MAILER=smtp
