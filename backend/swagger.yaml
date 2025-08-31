@@ -27,28 +27,9 @@ tags:
     description: Management of agricultural commodities
   - name: Geography
     description: Management of geographical data (Regions, Districts, Villages)
+  - name: Deliveries
+    description: Delivery management
 paths:
-  /auth/register:
-    post:
-      summary: Register a new user
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-      responses:
-        '201':
-          description: User registered successfully
   /auth/login:
     post:
       summary: Log in a user
@@ -217,8 +198,8 @@ paths:
           description: Unauthorized
   /users:
     post:
-      summary: Create COOP_ADMIN or BUYER_ADMIN users
-      description: Accessible only by SYSTEM_ADMIN. Used to create cooperative and buyer administrators.
+      summary: Create user
+      description: Accessible only by SYSTEM_ADMIN. Used to create users of any role.
       x-roles:
         - SYSTEM_ADMIN
       tags:
@@ -240,7 +221,7 @@ paths:
                   type: string
                 role:
                   type: string
-                  enum: [COOP_ADMIN, BUYER_ADMIN]
+                  enum: [FIELD_OPERATOR, COOP_ADMIN, BUYER_ADMIN, SYSTEM_ADMIN, BOARD_MEMBER]
                 organization_id:
                   type: integer
                   description: Required for COOP_ADMIN and BUYER_ADMIN roles.
@@ -272,85 +253,85 @@ paths:
           description: Current user's profile data
         '401':
           description: Unauthorized
-    '/users/{id}':
-      get:
-        summary: Get user by ID
-        description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-        x-roles:
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Users
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the user to retrieve
-        responses:
-          '200':
-            description: A single user object
-      patch:
-        summary: Update user details
-        description: Accessible by SYSTEM_ADMIN. Only SYSTEM_ADMIN can update roles or organization_id.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Users
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the user to update
-        requestBody:
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
+      x-roles:
+        - SYSTEM_ADMIN
+        - BOARD_MEMBER
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
           required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  username:
-                    type: string
-                  email:
-                    type: string
-                  phone_number:
-                    type: string
-                  role:
-                    type: string
-                    enum: [FIELD_OPERATOR, COOP_ADMIN, BUYER_ADMIN]
-                  organization_id:
-                    type: integer
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: User updated successfully
-      delete:
-        summary: Delete a user
-        description: Accessible only by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Users
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
+          description: ID of the user to retrieve
+      responses:
+        '200':
+          description: A single user object
+    patch:
+      summary: Update user details
+      description: Accessible by SYSTEM_ADMIN. Only SYSTEM_ADMIN can update roles or organization_id.
+      x-roles:
+        - SYSTEM_ADMIN
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the user to update
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-            required: true
-            description: ID of the user to delete
-        responses:
-          '200':
-            description: User deleted successfully
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                phone_number:
+                  type: string
+                role:
+                  type: string
+                  enum: [FIELD_OPERATOR, COOP_ADMIN, BUYER_ADMIN, SYSTEM_ADMIN, BOARD_MEMBER]
+                organization_id:
+                  type: integer
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: User updated successfully
+    delete:
+      summary: Delete a user
+      description: Accessible only by SYSTEM_ADMIN.
+      x-roles:
+        - SYSTEM_ADMIN
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the user to delete
+      responses:
+        '200':
+          description: User deleted successfully
   /coop-admin/field-operators:
     post:
       summary: Create a new FIELD_OPERATOR user
@@ -377,559 +358,26 @@ paths:
       responses:
         '201':
           description: FIELD_OPERATOR created successfully
-  /organizations:
-    post:
-      summary: Create a new organization
-      description: Accessible only by SYSTEM_ADMIN.
-      x-roles:
-        - SYSTEM_ADMIN
-      tags:
-        - Organizations
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                org_type:
-                  type: string
-                  enum: [COOPERATIVE, BUYER, PROCESSOR, EXPORTER]
-                location_details:
-                  type: string
-      responses:
-        '201':
-          description: Organization created successfully
-    get:
-      summary: Get all organizations
-      description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-      x-roles:
-        - SYSTEM_ADMIN
-        - BOARD_MEMBER
-      tags:
-        - Organizations
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: An array of organization objects
-    '/organizations/{id}':
-      get:
-        summary: Get organization by ID
-        description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-        x-roles:
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Organizations
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the organization to retrieve
-        responses:
-          '200':
-            description: A single organization object
-      patch:
-        summary: Update organization details
-        description: Accessible by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Organizations
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the organization to update
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  org_type:
-                    type: string
-                    enum: [COOPERATIVE, BUYER, PROCESSOR, EXPORTER]
-                  location_details:
-                    type: string
-        responses:
-          '200':
-            description: Organization updated successfully
-      delete:
-        summary: Delete an organization
-        description: Accessible only by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Organizations
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the organization to delete
-        responses:
-          '200':
-            description: Organization deleted successfully
-  /commodities:
-    post:
-      summary: Create a new commodity
-      description: Accessible only by SYSTEM_ADMIN.
-      x-roles:
-        - SYSTEM_ADMIN
-      tags:
-        - Commodities
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                unit_of_measure:
-                  type: string
-      responses:
-        '201':
-          description: Commodity created successfully
-    get:
-      summary: Get all commodities
-      description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-      x-roles:
-        - SYSTEM_ADMIN
-        - BOARD_MEMBER
-      tags:
-        - Commodities
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: An array of commodity objects
-    '/commodities/{id}':
-      get:
-        summary: Get commodity by ID
-        description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-        x-roles:
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Commodities
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the commodity to retrieve
-        responses:
-          '200':
-            description: A single commodity object
-      patch:
-        summary: Update commodity details
-        description: Accessible by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Commodities
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the commodity to update
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  unit_of_measure:
-                    type: string
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: Commodity updated successfully
-      delete:
-        summary: Delete a commodity
-        description: Accessible only by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Commodities
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the commodity to delete
-        responses:
-          '200':
-            description: Commodity deleted successfully
-  /geography/regions:
-    post:
-      summary: Create a new region
-      description: Accessible only by SYSTEM_ADMIN.
-      x-roles:
-        - SYSTEM_ADMIN
-      tags:
-        - Geography
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-      responses:
-        '201':
-          description: Region created successfully
-    get:
-      summary: Get all regions
-      description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-      x-roles:
-        - SYSTEM_ADMIN
-        - BOARD_MEMBER
-      tags:
-        - Geography
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: An array of region objects
-    '/geography/regions/{id}':
-      get:
-        summary: Get region by ID
-        description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-        x-roles:
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the region to retrieve
-        responses:
-          '200':
-            description: A single region object
-      patch:
-        summary: Update region details
-        description: Accessible by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the region to update
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: Region updated successfully
-      delete:
-        summary: Delete a region
-        description: Accessible only by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the region to delete
-        responses:
-          '200':
-            description: Region deleted successfully
-  /geography/districts:
-    post:
-      summary: Create a new district
-      description: Accessible only by SYSTEM_ADMIN.
-      x-roles:
-        - SYSTEM_ADMIN
-      tags:
-        - Geography
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                region_id:
-                  type: integer
-      responses:
-        '201':
-          description: District created successfully
-    get:
-      summary: Get all districts
-      description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-      x-roles:
-        - SYSTEM_ADMIN
-        - BOARD_MEMBER
-      tags:
-        - Geography
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: An array of district objects
-    '/geography/districts/{id}':
-      get:
-        summary: Get district by ID
-        description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-        x-roles:
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the district to retrieve
-        responses:
-          '200':
-            description: A single district object
-      patch:
-        summary: Update district details
-        description: Accessible by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the district to update
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  region_id:
-                    type: integer
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: District updated successfully
-      delete:
-        summary: Delete a district
-        description: Accessible only by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the district to delete
-        responses:
-          '200':
-            description: District deleted successfully
-  /geography/villages:
-    post:
-      summary: Create a new village
-      description: Accessible only by SYSTEM_ADMIN.
-      x-roles:
-        - SYSTEM_ADMIN
-      tags:
-        - Geography
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                district_id:
-                  type: integer
-      responses:
-        '201':
-          description: Village created successfully
-    get:
-      summary: Get all villages
-      description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-      x-roles:
-        - SYSTEM_ADMIN
-        - BOARD_MEMBER
-      tags:
-        - Geography
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: An array of village objects
-    '/geography/villages/{id}':
-      get:
-        summary: Get village by ID
-        description: Accessible by SYSTEM_ADMIN and BOARD_MEMBER.
-        x-roles:
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the village to retrieve
-        responses:
-          '200':
-            description: A single village object
-      patch:
-        summary: Update village details
-        description: Accessible by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the village to update
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  district_id:
-                    type: integer
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: Village updated successfully
-      delete:
-        summary: Delete a village
-        description: Accessible only by SYSTEM_ADMIN.
-        x-roles:
-          - SYSTEM_ADMIN
-        tags:
-          - Geography
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the village to delete
-        responses:
-          '200':
-            description: Village deleted successfully
   /farmers:
-    post:
-      summary: Register a new farmer record
-      description: Accessible by FIELD_OPERATOR, COOP_ADMIN, and SYSTEM_ADMIN roles. Farmers are records, not users.
+    get:
+      summary: List farmers
+      description: Accessible by COOP_ADMIN, SYSTEM_ADMIN, FIELD_OPERATOR.
       x-roles:
-        - FIELD_OPERATOR
         - COOP_ADMIN
         - SYSTEM_ADMIN
+        - FIELD_OPERATOR
+      tags:
+        - Farmers
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: An array of farmer objects
+    post:
+      summary: Register a new farmer record
+      description: Accessible by FIELD_OPERATOR only.
+      x-roles:
+        - FIELD_OPERATOR
       tags:
         - Farmers
       security:
@@ -954,101 +402,70 @@ paths:
       responses:
         '201':
           description: Newly created farmer object
+  /farmers/{id}:
     get:
-      summary: Retrieve a list of farmers
-      description: Accessible by COOP_ADMIN, SYSTEM_ADMIN, and BOARD_MEMBER roles.
+      summary: Get farmer by ID
+      description: Accessible by COOP_ADMIN, SYSTEM_ADMIN, FIELD_OPERATOR.
       x-roles:
         - COOP_ADMIN
         - SYSTEM_ADMIN
+        - FIELD_OPERATOR
+      tags:
+        - Farmers
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the farmer to retrieve
+      responses:
+        '200':
+          description: A single farmer object
+    patch:
+      summary: Update farmer
+      description: Accessible by COOP_ADMIN, SYSTEM_ADMIN, FIELD_OPERATOR, BUYER_ADMIN, BOARD_MEMBER.
+      x-roles:
+        - COOP_ADMIN
+        - SYSTEM_ADMIN
+        - FIELD_OPERATOR
+        - BUYER_ADMIN
         - BOARD_MEMBER
       tags:
         - Farmers
       security:
         - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the farmer to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                phone_number:
+                  type: string
+                cooperative_id:
+                  type: integer
+                village_id:
+                  type: integer
+                is_active:
+                  type: boolean
       responses:
         '200':
-          description: An array of farmer objects
-    '/farmers/{id}':
-      get:
-        summary: Retrieve details of a single farmer
-        description: Accessible by COOP_ADMIN, SYSTEM_ADMIN, and BOARD_MEMBER roles.
-        x-roles:
-          - COOP_ADMIN
-          - SYSTEM_ADMIN
-          - BOARD_MEMBER
-        tags:
-          - Farmers
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the farmer to retrieve
-        responses:
-          '200':
-            description: A single farmer object
-      patch:
-        summary: Update a farmer record
-        description: Accessible by COOP_ADMIN and SYSTEM_ADMIN roles.
-        x-roles:
-          - COOP_ADMIN
-          - SYSTEM_ADMIN
-        tags:
-          - Farmers
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the farmer to update
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  first_name:
-                    type: string
-                  last_name:
-                    type: string
-                  phone_number:
-                    type: string
-                  cooperative_id:
-                    type: integer
-                  village_id:
-                    type: integer
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: Farmer updated successfully
-      delete:
-        summary: Delete a farmer record
-        description: Accessible by COOP_ADMIN and SYSTEM_ADMIN roles.
-        x-roles:
-          - COOP_ADMIN
-          - SYSTEM_ADMIN
-        tags:
-          - Farmers
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the farmer to delete
-        responses:
-          '200':
-            description: Farmer deleted successfully
+          description: Farmer updated successfully
   /farmers/{id}/deactivate:
     patch:
       summary: Deactivate a farmer record
@@ -1071,9 +488,23 @@ paths:
         '200':
           description: Farmer deactivated successfully
   /collections:
+    get:
+      summary: List collections
+      description: Accessible by COOP_ADMIN, SYSTEM_ADMIN, FIELD_OPERATOR.
+      x-roles:
+        - COOP_ADMIN
+        - SYSTEM_ADMIN
+        - FIELD_OPERATOR
+      tags:
+        - Collections
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: An array of collection objects
     post:
-      summary: Create a new produce collection record
-      description: Accessible by FIELD_OPERATOR role.
+      summary: Record a new produce collection
+      description: Accessible by FIELD_OPERATOR only.
       x-roles:
         - FIELD_OPERATOR
       tags:
@@ -1087,19 +518,26 @@ paths:
             schema:
               type: object
               properties:
-                  farmer_id:
-                    type: integer
-                  commodity_id:
-                    type: integer
-                  quantity:
-                    type: number
-                    format: float
+                farmer_id:
+                  type: integer
+                commodity_id:
+                  type: integer
+                quantity:
+                  type: number
+                  format: float
+                unit_price:
+                  type: number
+                  format: float
+                collected_at:
+                  type: string
+                  format: date-time
       responses:
         '201':
           description: Newly created collection object
+  /collections/{id}:
     get:
-      summary: Retrieve a list of all collections
-      description: Accessible by COOP_ADMIN and SYSTEM_ADMIN roles.
+      summary: Get collection by ID
+      description: Accessible by COOP_ADMIN and SYSTEM_ADMIN.
       x-roles:
         - COOP_ADMIN
         - SYSTEM_ADMIN
@@ -1107,86 +545,51 @@ paths:
         - Collections
       security:
         - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the collection to retrieve
       responses:
         '200':
-          description: An array of collection objects
-    '/collections/{id}':
-      get:
-        summary: Retrieve details of a single collection
-        description: Accessible by COOP_ADMIN and SYSTEM_ADMIN roles.
-        x-roles:
-          - COOP_ADMIN
-          - SYSTEM_ADMIN
-        tags:
-          - Collections
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the collection to retrieve
-        responses:
-          '200':
-            description: A single collection object
-      patch:
-        summary: Update a collection record
-        description: Accessible by COOP_ADMIN and SYSTEM_ADMIN roles.
-        x-roles:
-          - COOP_ADMIN
-          - SYSTEM_ADMIN
-        tags:
-          - Collections
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
-            schema:
-              type: integer
-            required: true
-            description: ID of the collection to update
-        requestBody:
+          description: A single collection object
+    patch:
+      summary: Update collection
+      description: Accessible by FIELD_OPERATOR, COOP_ADMIN.
+      x-roles:
+        - FIELD_OPERATOR
+        - COOP_ADMIN
+      tags:
+        - Collections
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
           required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  farmer_id:
-                    type: integer
-                  commodity_id:
-                    type: integer
-                  quantity:
-                    type: number
-                    format: float
-                  is_active:
-                    type: boolean
-        responses:
-          '200':
-            description: Collection updated successfully
-      delete:
-        summary: Delete a collection record
-        description: Accessible by COOP_ADMIN and SYSTEM_ADMIN roles.
-        x-roles:
-          - COOP_ADMIN
-          - SYSTEM_ADMIN
-        tags:
-          - Collections
-        security:
-          - BearerAuth: []
-        parameters:
-          - in: path
-            name: id
+          description: ID of the collection to update
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-            required: true
-            description: ID of the collection to delete
-        responses:
-          '200':
-            description: Collection deleted successfully
+              type: object
+              properties:
+                quantity:
+                  type: number
+                  format: float
+                unit_price:
+                  type: number
+                  format: float
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Collection updated successfully
   /collections/{id}/deactivate:
     patch:
       summary: Deactivate a collection record
@@ -1208,6 +611,26 @@ paths:
       responses:
         '200':
           description: Collection deactivated successfully
+  /collections/{id}/mark-paid:
+    patch:
+      summary: Mark collection as paid
+      description: Accessible by COOP_ADMIN only.
+      x-roles:
+        - COOP_ADMIN
+      tags:
+        - Collections
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the collection to mark as paid
+      responses:
+        '200':
+          description: Collection marked as paid
   /orders:
     post:
       summary: Place a new order
