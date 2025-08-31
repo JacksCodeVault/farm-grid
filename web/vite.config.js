@@ -16,6 +16,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: true, // Make the server accessible from outside the container
     proxy: {
       '/api': {
         target: 'http://localhost:3333',

@@ -41,7 +41,7 @@ services:
       dockerfile: Dockerfile
     container_name: farmgrid-web
     ports:
-      - "8004:5173"
+      - "8007:5173"
     restart: always
     depends_on:
       - farmgrid-backend
