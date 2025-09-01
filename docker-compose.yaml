@@ -6,6 +6,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: farmgrid-backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8005:3333"
     restart: always
