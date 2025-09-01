@@ -30,15 +30,12 @@ export default function AboutUsPage() {
         style={{ width: '100vw', height: '100vh' }}
         colors={["#000000", "#06b6d4", "#0891b2", "#164e63", "#f97316"]}
         speed={0.3}
-        backgroundColor="#000000"
       />
       <MeshGradient
         className="fixed inset-0 opacity-60"
         style={{ width: '100vw', height: '100vh' }}
         colors={["#000000", "#ffffff", "#06b6d4", "#f97316"]}
         speed={0.2}
-        wireframe={true}
-        backgroundColor="transparent"
       />
 
       {/* Professional Navigation Bar */}

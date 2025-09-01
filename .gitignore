@@ -1,16 +1,17 @@
 # General
 .DS_Store
 *.log
+.env
 
 # Backend (Node.js)
 backend/node_modules
 backend/.env
 
 # Web App (Vite + React)
-web_app/node_modules
-web_app/dist
-web_app/.env*
-web_app/.DS_Store
+web/node_modules
+web/dist
+web/.env*
+web/.DS_Store
 
 # Mobile App (Flutter)
 mobile_app/.dart_tool/
